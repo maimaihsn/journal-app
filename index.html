@@ -37,7 +37,7 @@
     /* ── Header ── */
     header {
       width: 100%;
-      max-width: 640px;
+      max-width: 700px;
       margin-bottom: 20px;
     }
 
@@ -111,7 +111,7 @@
     /* ── Settings panel ── */
     .settings-panel {
       width: 100%;
-      max-width: 640px;
+      max-width: 700px;
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius);
@@ -590,7 +590,7 @@
     /* ── Main layout (sidebar + content) ── */
     .main-layout {
       width: 100%;
-      max-width: 640px;
+      max-width: 700px;
       display: flex;
       align-items: flex-start;
       gap: 12px;
@@ -598,29 +598,30 @@
 
     /* ── Calendar widget (left sidebar) ── */
     #calendar-widget {
-      width: 148px;
+      width: 200px;
       flex-shrink: 0;
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
-      padding: 8px;
+      padding: 10px;
       position: sticky;
       top: 16px;
     }
 
     /* ── Content area ── */
     #content-area {
-      flex: 1;
-      min-width: 0;
+      width: 480px;
+      flex-shrink: 0;
       display: flex;
       flex-direction: column;
       gap: 0;
     }
 
-    @media (max-width: 500px) {
+    @media (max-width: 540px) {
       .main-layout { flex-direction: column; }
       #calendar-widget { width: 100%; position: static; }
+      #content-area { width: 100%; }
     }
 
     .calendar-header {
@@ -644,7 +645,7 @@
     .calendar-header button:hover { background: var(--accent-light); }
 
     #cal-month {
-      font-size: 0.7rem;
+      font-size: 0.85rem;
       font-weight: 600;
       color: var(--text);
     }
@@ -657,10 +658,10 @@
 
     .cal-day-header {
       text-align: center;
-      font-size: 0.55rem;
+      font-size: 0.7rem;
       font-weight: 700;
       color: var(--text-sub);
-      padding: 1px;
+      padding: 2px 1px;
       letter-spacing: 0.05em;
     }
 
@@ -669,7 +670,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.6rem;
+      font-size: 0.75rem;
       border-radius: 3px;
       cursor: pointer;
       background: var(--bg);
@@ -683,7 +684,7 @@
     .cal-date.other-month {
       color: var(--border);
       cursor: default;
-      font-size: 0.5rem;
+      font-size: 0.65rem;
     }
 
     .cal-date.has-data::after {
@@ -1408,12 +1409,19 @@
   function toggleWantToDo(index) {
     const data = loadPersistent();
     const item = data.wantToDo[index];
+    let text;
+
     if (typeof item === 'object') {
       item.done = !item.done;
+      text = item.text;
+      if (item.done) celebrateWantToDo(text);
     } else {
       // 旧フォーマット（文字列）の場合はオブジェクトに昇格
       data.wantToDo[index] = { text: item, addedAt: '', done: true };
+      text = item;
+      celebrateWantToDo(text);
     }
+
     savePersistent(data);
     render();
   }
@@ -1636,6 +1644,40 @@
   // ══════════════════════════════════════════════
   // Discord Notify
   // ══════════════════════════════════════════════
+
+  const CELEBRATE_MESSAGES = [
+    { title: '🎉 やったー！達成おめでとう！',       body: 'やりたいことをやり遂げた自分を、思いっきり褒めてあげてください。\nその一歩が、次の挑戦への自信になります💪' },
+    { title: '🌟 すごい！本当にすごい！',           body: '「やりたい」を「やった」に変えた瞬間は、最高の瞬間です。\nあなたには行動する力が確かにあります✨' },
+    { title: '🏆 達成！おめでとうございます！',      body: '小さな成功体験の積み重ねが、あなたをどんどん成長させています。\nこの調子で、次も楽しんでいきましょう🚀' },
+    { title: '🌈 最高です！よくやりました！',        body: '行動できた自分を誇りに思ってください。\n夢を現実にする体験を、どんどん積み重ねていきましょう🌸' },
+    { title: '✨ 輝いています！素晴らしい！',        body: 'やりたいことに向かって動いたあなたは、今日も輝いています。\n一つひとつの達成が、未来の自分へのプレゼントです🎁' },
+    { title: '💫 感動的！よく頑張りました！',        body: '「やろう」と思っただけで終わらず、実際に動いた。\nそれだけで、もう十分すごいことです🌻' },
+    { title: '🎊 おめでとう！また一つ叶えたね！',    body: '自分を信じて行動し続けるあなたが大好きです。\n成功体験を重ねるたびに、もっと自由になっていきます⭐' },
+  ];
+
+  async function celebrateWantToDo(text) {
+    const url = loadSettings().webhookUrl;
+    if (!url) return;
+
+    const msg = CELEBRATE_MESSAGES[Math.floor(Math.random() * CELEBRATE_MESSAGES.length)];
+
+    try {
+      await fetch(url, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          embeds: [{
+            title:       msg.title,
+            description: `**「${text}」** を実行しました！\n\n${msg.body}`,
+            color:       0xf0b429,   // ゴールド
+            footer:      { text: `Daily Journal  •  ${formatDisplay(currentDate)}` },
+            timestamp:   new Date().toISOString(),
+          }],
+        }),
+      });
+    } catch { /* 通知失敗は無視 */ }
+  }
+
   async function notify(key, text) {
     const url = loadSettings().webhookUrl;
     if (!url) return;
