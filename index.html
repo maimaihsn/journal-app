@@ -1,0 +1,1783 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daily Journal</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #f7f6f3;
+      --surface: #ffffff;
+      --border: #e4e2dc;
+      --text: #1c1c1c;
+      --text-sub: #888;
+      --accent: #5b7fa6;
+      --accent-light: #eef2f8;
+      --accent2: #6a9e7f;       /* 蓄積グループ */
+      --accent2-light: #eef5f1;
+      --done: #aaa;
+      --danger: #c0392b;
+      --radius: 10px;
+      --shadow: 0 1px 4px rgba(0,0,0,0.07);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Hiragino Sans', 'Yu Gothic', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px 60px;
+    }
+
+    /* ── Header ── */
+    header {
+      width: 100%;
+      max-width: 640px;
+      margin-bottom: 20px;
+    }
+
+    .header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
+
+    h1 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      color: var(--text-sub);
+      text-transform: uppercase;
+    }
+
+    .header-actions { display: flex; gap: 6px; }
+
+    .icon-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 5px 11px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      color: var(--text);
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+
+    .icon-btn:hover { background: var(--accent-light); }
+    .icon-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+    /* Date nav */
+    .date-nav {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .date-nav button {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 6px 12px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      color: var(--text);
+      transition: background 0.15s;
+    }
+
+    .date-nav button:hover { background: var(--accent-light); }
+
+    #date-display {
+      flex: 1;
+      text-align: center;
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    #today-btn {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    #today-btn:hover { opacity: 0.85; }
+
+    /* ── Settings panel ── */
+    .settings-panel {
+      width: 100%;
+      max-width: 640px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 18px 20px;
+      margin-bottom: 16px;
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .settings-panel.open { display: flex; }
+
+    .settings-panel label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-sub);
+      letter-spacing: 0.05em;
+    }
+
+    .settings-panel input[type="text"] {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 0.85rem;
+      color: var(--text);
+      background: var(--bg);
+      outline: none;
+      font-family: monospace;
+      transition: border-color 0.15s;
+    }
+
+    .settings-panel input[type="text"]:focus { border-color: var(--accent); }
+
+    .settings-actions { display: flex; gap: 8px; }
+
+    .save-settings-btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 7px 16px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+
+    .save-settings-btn:hover { opacity: 0.85; }
+
+    .test-btn {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 7px 14px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .test-btn:hover { background: var(--accent-light); }
+
+    .settings-note {
+      font-size: 0.75rem;
+      color: var(--text-sub);
+      line-height: 1.5;
+    }
+
+    /* ── Tab groups ── */
+    .tab-group {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+
+    .tab-group + .tab-group { margin-bottom: 14px; }
+
+    .group-label {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      padding: 4px 7px;
+      border-radius: 6px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .group-label.persist {
+      background: var(--accent2-light);
+      color: var(--accent2);
+    }
+
+    .group-label.daily {
+      background: var(--accent-light);
+      color: var(--accent);
+    }
+
+    .tab-btn {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 8px 6px;
+      font-size: 0.78rem;
+      cursor: pointer;
+      color: var(--text-sub);
+      text-align: center;
+      transition: all 0.15s;
+      line-height: 1.3;
+    }
+
+    .tab-btn.active-persist {
+      background: var(--accent2);
+      border-color: var(--accent2);
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .tab-btn.active-daily {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .tab-btn:not(.active-persist):not(.active-daily):hover { background: var(--accent-light); }
+
+    /* ── Panel ── */
+    .panel {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 12px;
+      display: none;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .panel.active { display: flex; }
+
+    .panel-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 6px;
+    }
+
+    .panel-title.persist { color: var(--accent2); }
+    .panel-title.daily   { color: var(--accent); }
+
+    /* ── List items ── */
+    .item-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .item-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      animation: fadeIn 0.15s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .item-row input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--accent);
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .item-row input[type="checkbox"].want-check {
+      accent-color: var(--accent2);
+    }
+
+    .item-text.want-done {
+      text-decoration: line-through;
+      color: var(--done);
+    }
+
+    .item-text {
+      flex: 1;
+      font-size: 0.95rem;
+      line-height: 1.5;
+      color: var(--text);
+      word-break: break-all;
+    }
+
+    .item-date {
+      font-size: 0.7rem;
+      color: var(--text-sub);
+      margin-left: 8px;
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+
+    .item-text.done {
+      text-decoration: line-through;
+      color: var(--done);
+    }
+
+    .del-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--border);
+      font-size: 1.1rem;
+      padding: 2px 4px;
+      border-radius: 4px;
+      transition: color 0.15s;
+      flex-shrink: 0;
+    }
+
+    .del-btn:hover { color: var(--danger); }
+
+    .edit-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      color: var(--border);
+      font-size: 0.82rem;
+      padding: 2px 5px;
+      border-radius: 4px;
+      transition: color 0.15s;
+      flex-shrink: 0;
+    }
+
+    .edit-btn:hover { color: var(--accent); }
+
+    .edit-input {
+      flex: 1;
+      border: 1px solid var(--accent);
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 0.95rem;
+      color: var(--text);
+      background: var(--bg);
+      outline: none;
+      font-family: inherit;
+      min-width: 0;
+    }
+
+    .confirm-btn {
+      background: var(--accent2);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 3px 10px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: opacity 0.15s;
+    }
+
+    .confirm-btn:hover { opacity: 0.85; }
+
+    .cancel-edit-btn {
+      background: var(--surface);
+      color: var(--text-sub);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 3px 10px;
+      font-size: 0.85rem;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background 0.15s;
+    }
+
+    .cancel-edit-btn:hover { background: var(--accent-light); }
+
+    /* ── Add row ── */
+    .add-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .add-row input[type="text"] {
+      flex: 1;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 0.95rem;
+      color: var(--text);
+      background: var(--bg);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .add-row input[type="text"]:focus { border-color: var(--accent); }
+
+    .add-btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 18px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+
+    .add-btn:hover { opacity: 0.85; }
+
+    /* ── Journal textarea ── */
+    #journal-text {
+      width: 100%;
+      min-height: 260px;
+      resize: vertical;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 0.95rem;
+      line-height: 1.8;
+      color: var(--text);
+      background: var(--bg);
+      outline: none;
+      font-family: inherit;
+      transition: border-color 0.15s;
+    }
+
+    #journal-text:focus { border-color: var(--accent); }
+
+    .save-indicator {
+      font-size: 0.75rem;
+      color: var(--text-sub);
+      text-align: right;
+    }
+
+    .empty-msg {
+      font-size: 0.85rem;
+      color: var(--text-sub);
+      text-align: center;
+      padding: 12px 0;
+    }
+
+    /* ── History view ── */
+    #history-view {
+      display: none;
+      width: 100%;
+      max-width: 600px;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    #history-view.active { display: flex; }
+
+    .history-empty {
+      text-align: center;
+      color: var(--text-sub);
+      font-size: 0.9rem;
+      padding: 40px 0;
+    }
+
+    .history-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .history-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .history-card-header:hover { background: var(--accent-light); }
+
+    .history-date {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .history-summary {
+      font-size: 0.75rem;
+      color: var(--text-sub);
+    }
+
+    .history-chevron {
+      font-size: 0.75rem;
+      color: var(--text-sub);
+      transition: transform 0.2s;
+    }
+
+    .history-card.collapsed .history-chevron { transform: rotate(-90deg); }
+
+    .history-card-body {
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .history-card.collapsed .history-card-body { display: none; }
+
+    .history-section-title {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+
+    .history-items {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .history-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 0.88rem;
+      line-height: 1.5;
+      color: var(--text);
+    }
+
+    .history-item .hi-icon {
+      flex-shrink: 0;
+      font-size: 0.8rem;
+      margin-top: 2px;
+    }
+
+    .history-item.done-item .hi-text {
+      text-decoration: line-through;
+      color: var(--done);
+    }
+
+    .history-journal {
+      font-size: 0.88rem;
+      line-height: 1.7;
+      color: var(--text);
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .history-journal.truncated {
+      display: -webkit-box;
+      -webkit-line-clamp: 4;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .expand-btn {
+      background: none;
+      border: none;
+      color: var(--accent);
+      font-size: 0.78rem;
+      cursor: pointer;
+      padding: 2px 0;
+      text-align: left;
+    }
+
+    /* ── Main layout (sidebar + content) ── */
+    .main-layout {
+      width: 100%;
+      max-width: 640px;
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    /* ── Calendar widget (left sidebar) ── */
+    #calendar-widget {
+      width: 148px;
+      flex-shrink: 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 8px;
+      position: sticky;
+      top: 16px;
+    }
+
+    /* ── Content area ── */
+    #content-area {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    @media (max-width: 500px) {
+      .main-layout { flex-direction: column; }
+      #calendar-widget { width: 100%; position: static; }
+    }
+
+    .calendar-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    .calendar-header button {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-size: 0.65rem;
+      cursor: pointer;
+      color: var(--text);
+      transition: background 0.15s;
+    }
+
+    .calendar-header button:hover { background: var(--accent-light); }
+
+    #cal-month {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    #calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 1px;
+    }
+
+    .cal-day-header {
+      text-align: center;
+      font-size: 0.55rem;
+      font-weight: 700;
+      color: var(--text-sub);
+      padding: 1px;
+      letter-spacing: 0.05em;
+    }
+
+    .cal-date {
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.6rem;
+      border-radius: 3px;
+      cursor: pointer;
+      background: var(--bg);
+      color: var(--text);
+      transition: background 0.15s, color 0.15s;
+      border: 1px solid transparent;
+      font-weight: 500;
+      position: relative;
+    }
+
+    .cal-date.other-month {
+      color: var(--border);
+      cursor: default;
+      font-size: 0.5rem;
+    }
+
+    .cal-date.has-data::after {
+      content: '●';
+      position: absolute;
+      top: 1px;
+      right: 1px;
+      font-size: 0.3rem;
+      color: var(--accent);
+      font-weight: 900;
+    }
+
+    .cal-date.today {
+      background: var(--accent);
+      color: #fff;
+      font-weight: 700;
+      border: 1px solid var(--accent);
+    }
+
+    .cal-date.today.has-data::after {
+      color: #fff;
+    }
+
+    .cal-date:not(.other-month):not(.today):hover {
+      background: var(--accent-light);
+    }
+
+    #history-calendar-widget {
+      width: 100%;
+      max-width: 600px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 10px;
+      margin-bottom: 14px;
+    }
+
+    #history-calendar-widget .calendar-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    #history-calendar-widget .calendar-header button {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-size: 0.65rem;
+      cursor: pointer;
+      color: var(--text);
+      transition: background 0.15s;
+    }
+
+    #history-calendar-widget .calendar-header button:hover { background: var(--accent-light); }
+
+    #history-calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 1px;
+    }
+
+    #history-calendar-grid .cal-day-header {
+      text-align: center;
+      font-size: 0.55rem;
+      font-weight: 700;
+      color: var(--text-sub);
+      padding: 1px;
+      letter-spacing: 0.05em;
+    }
+
+    #history-calendar-grid .cal-date {
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.6rem;
+      border-radius: 3px;
+      cursor: pointer;
+      background: var(--bg);
+      color: var(--text);
+      transition: background 0.15s, color 0.15s;
+      border: 1px solid transparent;
+      font-weight: 500;
+      position: relative;
+    }
+
+    #history-calendar-grid .cal-date.other-month {
+      color: var(--border);
+      cursor: default;
+      font-size: 0.5rem;
+    }
+
+    #history-calendar-grid .cal-date.has-data::after {
+      content: '●';
+      position: absolute;
+      top: 1px;
+      right: 1px;
+      font-size: 0.3rem;
+      color: var(--accent);
+      font-weight: 900;
+    }
+
+    #history-calendar-grid .cal-date.today {
+      background: var(--accent);
+      color: #fff;
+      font-weight: 700;
+      border: 1px solid var(--accent);
+    }
+
+    #history-calendar-grid .cal-date.today.has-data::after {
+      color: #fff;
+    }
+
+    #history-calendar-grid .cal-date:not(.other-month):not(.today):hover {
+      background: var(--accent-light);
+    }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #1c1c1c;
+      color: #fff;
+      border-radius: 20px;
+      padding: 9px 20px;
+      font-size: 0.85rem;
+      opacity: 0;
+      transition: opacity 0.25s, transform 0.25s;
+      pointer-events: none;
+      white-space: nowrap;
+      z-index: 999;
+    }
+
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    #toast.error { background: var(--danger); }
+
+    /* ── Responsive ── */
+    @media (max-width: 420px) {
+      .tab-btn { font-size: 0.72rem; padding: 7px 4px; }
+      .group-label { font-size: 0.6rem; padding: 3px 5px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-row">
+    <h1>Daily Journal</h1>
+    <div class="header-actions">
+      <button class="icon-btn" id="history-toggle">📋 一覧</button>
+      <button class="icon-btn" id="summary-btn" title="今日の日次まとめをDiscordに送信">📨 まとめ</button>
+      <button class="icon-btn" id="settings-toggle">⚙️</button>
+    </div>
+  </div>
+  <div class="date-nav" id="date-nav">
+    <button id="prev-btn">&#8249;</button>
+    <span id="date-display"></span>
+    <button id="next-btn">&#8250;</button>
+    <button id="today-btn">今日</button>
+  </div>
+</header>
+
+<!-- Settings panel -->
+<div class="settings-panel" id="settings-panel">
+  <label>Discord Webhook URL</label>
+  <input type="text" id="webhook-url" placeholder="https://discord.com/api/webhooks/...">
+  <div class="settings-actions">
+    <button class="save-settings-btn" onclick="saveSettings()">保存</button>
+    <button class="test-btn" onclick="testWebhook()">テスト送信</button>
+  </div>
+  <div class="settings-note">
+    通知対象：<strong>やりたいこと</strong>・<strong>今日のToDo</strong> にアイテムを追加したとき<br>
+    Webhook URL は Discord のチャンネル設定 → 連携サービス → ウェブフック から取得できます
+  </div>
+</div>
+
+<!-- ── Main view ── -->
+<div id="main-view">
+<div class="main-layout">
+
+<!-- Calendar widget (left sidebar) -->
+<div id="calendar-widget">
+  <div class="calendar-header">
+    <button id="cal-prev">◀</button>
+    <span id="cal-month">2026年5月</span>
+    <button id="cal-next">▶</button>
+  </div>
+  <div id="calendar-grid"></div>
+</div>
+
+<!-- Content area (tabs + panels) -->
+<div id="content-area">
+
+  <!-- 蓄積タブ群 -->
+  <div class="tab-group">
+    <span class="group-label persist">蓄積</span>
+    <button class="tab-btn active-persist" data-tab="wantToDo" data-group="persist">やりたいこと</button>
+    <button class="tab-btn" data-tab="wishlist"  data-group="persist">ほしいもの</button>
+    <button class="tab-btn" data-tab="goals"     data-group="persist">目標</button>
+  </div>
+
+  <!-- 日別タブ群 -->
+  <div class="tab-group">
+    <span class="group-label daily">日別</span>
+    <button class="tab-btn" data-tab="todos"    data-group="daily">今日のToDo</button>
+    <button class="tab-btn" data-tab="didToday" data-group="daily">今日やったこと</button>
+    <button class="tab-btn" data-tab="journal"  data-group="daily">ジャーナル</button>
+  </div>
+
+  <!-- 蓄積パネル -->
+  <div class="panel active" id="panel-wantToDo">
+    <div class="panel-title persist">やりたいこと</div>
+    <div class="item-list" id="list-wantToDo"></div>
+    <div class="add-row">
+      <input type="text" id="input-wantToDo" placeholder="やりたいことを追加...">
+      <button class="add-btn" onclick="addItem('wantToDo')">追加</button>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-wishlist">
+    <div class="panel-title persist">ほしいもの</div>
+    <div class="item-list" id="list-wishlist"></div>
+    <div class="add-row">
+      <input type="text" id="input-wishlist" placeholder="ほしいものを追加...">
+      <button class="add-btn" onclick="addItem('wishlist')">追加</button>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-goals">
+    <div class="panel-title persist">目標</div>
+    <div class="item-list" id="list-goals"></div>
+    <div class="add-row">
+      <input type="text" id="input-goals" placeholder="目標を追加...">
+      <button class="add-btn" onclick="addItem('goals')">追加</button>
+    </div>
+  </div>
+
+  <!-- 日別パネル -->
+  <div class="panel" id="panel-todos">
+    <div class="panel-title daily">今日のToDo</div>
+    <div class="item-list" id="list-todos"></div>
+    <div class="add-row">
+      <input type="text" id="input-todos" placeholder="ToDoを追加...">
+      <button class="add-btn" onclick="addItem('todos')">追加</button>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-didToday">
+    <div class="panel-title daily">今日やったこと</div>
+    <div class="item-list" id="list-didToday"></div>
+    <div class="add-row">
+      <input type="text" id="input-didToday" placeholder="今日やったことを追加...">
+      <button class="add-btn" onclick="addItem('didToday')">追加</button>
+    </div>
+  </div>
+
+  <div class="panel" id="panel-journal">
+    <div class="panel-title daily">ジャーナリング</div>
+    <textarea id="journal-text" placeholder="今日のことを自由に書いてください..."></textarea>
+    <div class="save-indicator" id="save-indicator"></div>
+  </div>
+
+</div><!-- /content-area -->
+
+</div><!-- /main-layout -->
+</div><!-- /main-view -->
+
+<!-- ── History view ── -->
+<div id="history-view">
+  <div id="history-calendar-widget">
+    <div class="calendar-header">
+      <button id="hist-cal-prev">◀</button>
+      <span id="hist-cal-month">2026年5月</span>
+      <button id="hist-cal-next">▶</button>
+    </div>
+    <div id="history-calendar-grid"></div>
+  </div>
+  <div id="history-content"></div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  // ══════════════════════════════════════════════
+  // Storage  (v2: persistent / daily 分離)
+  // ══════════════════════════════════════════════
+  const STORAGE_KEY  = 'daily-journal-v2';
+  const SETTINGS_KEY = 'daily-journal-settings';
+
+  const PERSIST_KEYS = ['wantToDo', 'wishlist', 'goals'];
+  const DAILY_KEYS   = ['todos', 'didToday', 'journal'];
+  const NOTIFY_KEYS  = { wantToDo: true, todos: true };
+
+  const SECTION_LABELS = {
+    wantToDo: { label: 'やりたいこと', emoji: '✨', color: 0x6a9e7f },
+    todos:    { label: '今日のToDo',   emoji: '✅', color: 0x5b7fa6 },
+  };
+
+  function loadStore() {
+    try {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY))
+        || { persistent: { wantToDo: [], wishlist: [], goals: [] }, daily: {} };
+    } catch { return { persistent: { wantToDo: [], wishlist: [], goals: [] }, daily: {} }; }
+  }
+
+  function saveStore(store) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
+  }
+
+  function loadPersistent() {
+    const s = loadStore();
+    const defaults = { wantToDo: [], wishlist: [], goals: [] };
+    const persist = Object.assign({}, defaults, s.persistent || {});
+
+    // Convert old string format to new {text, addedAt} format
+    PERSIST_KEYS.forEach(key => {
+      if (persist[key] && persist[key].length > 0) {
+        const first = persist[key][0];
+        if (typeof first === 'string') {
+          persist[key] = persist[key].map(text => ({
+            text: text,
+            addedAt: todayStr()
+          }));
+        }
+      }
+    });
+
+    return persist;
+  }
+
+  function savePersistent(data) {
+    const s = loadStore();
+    s.persistent = data;
+    saveStore(s);
+  }
+
+  function loadDay(date) {
+    const s = loadStore();
+    const defaults = { todos: [], didToday: [], journal: '' };
+    return Object.assign({}, defaults, (s.daily || {})[date] || {});
+  }
+
+  function saveDay(date, data) {
+    const s = loadStore();
+    if (!s.daily) s.daily = {};
+    s.daily[date] = data;
+    saveStore(s);
+  }
+
+  function allDailyDates() {
+    const s = loadStore();
+    return Object.keys(s.daily || {}).sort().reverse();
+  }
+
+  // ── v1 migration ──────────────────────────────
+  function migrateV1() {
+    const raw = localStorage.getItem('daily-journal-v1');
+    if (!raw) return;
+    try {
+      const old = JSON.parse(raw);
+      const store = { persistent: { wantToDo: [], wishlist: [], goals: [] }, daily: {} };
+      const dates = Object.keys(old).sort().reverse();
+
+      // 蓄積データ: 最新の非空データを採用（文字列配列で保存）
+      for (const date of dates) {
+        if (!store.persistent.wantToDo.length && old[date].wantToDo?.length)
+          store.persistent.wantToDo = old[date].wantToDo;
+        if (!store.persistent.wishlist.length && old[date].wishlist?.length)
+          store.persistent.wishlist = old[date].wishlist;
+        if (!store.persistent.goals.length && old[date].goals?.length)
+          store.persistent.goals = old[date].goals;
+      }
+
+      // 日別データ
+      for (const [date, day] of Object.entries(old)) {
+        const hasData = day.todos?.length || day.didToday?.length || day.journal;
+        if (hasData) {
+          store.daily[date] = {
+            todos:    day.todos    || [],
+            didToday: day.didToday || [],
+            journal:  day.journal  || '',
+          };
+        }
+      }
+
+      saveStore(store);
+      localStorage.removeItem('daily-journal-v1');
+    } catch(e) { console.error('Migration error', e); }
+  }
+
+  // ── v2→v2.1: string to {text, addedAt} migration ──
+  function migrateV2ToV2_1() {
+    const store = loadStore();
+    if (!store.persistent) return;
+
+    const converted = {};
+    PERSIST_KEYS.forEach(key => {
+      if (store.persistent[key]) {
+        const first = store.persistent[key][0];
+        if (typeof first === 'string') {
+          converted[key] = store.persistent[key].map(text => ({
+            text: text,
+            addedAt: todayStr()
+          }));
+        }
+      }
+    });
+
+    if (Object.keys(converted).length > 0) {
+      PERSIST_KEYS.forEach(key => {
+        if (converted[key]) store.persistent[key] = converted[key];
+      });
+      saveStore(store);
+    }
+  }
+
+  // ══════════════════════════════════════════════
+  // State
+  // ══════════════════════════════════════════════
+  let currentDate = todayStr();
+  let activeTab   = 'wantToDo';
+  let saveTimer   = null;
+  let historyMode = false;
+  let calendarYear = new Date().getFullYear();
+  let calendarMonth = new Date().getMonth();
+  let historyCalendarYear = calendarYear;
+  let historyCalendarMonth = calendarMonth;
+
+  function todayStr() {
+    const d = new Date();
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  }
+
+  function pad(n) { return String(n).padStart(2, '0'); }
+
+  function shiftDate(str, days) {
+    const d = new Date(str + 'T00:00:00');
+    d.setDate(d.getDate() + days);
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  }
+
+  function formatDisplay(str) {
+    const d = new Date(str + 'T00:00:00');
+    const dow = ['日','月','火','水','木','金','土'][d.getDay()];
+    return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${dow}）`;
+  }
+
+  // ══════════════════════════════════════════════
+  // Render — Main view
+  // ══════════════════════════════════════════════
+  function render() {
+    document.getElementById('date-display').textContent = formatDisplay(currentDate);
+
+    // 蓄積
+    const persist = loadPersistent();
+    PERSIST_KEYS.forEach(key => renderList(key, persist[key] || [], false));
+
+    // 日別
+    const day = loadDay(currentDate);
+    renderList('todos',    day.todos    || [], true);
+    renderList('didToday', day.didToday || [], false);
+    document.getElementById('journal-text').value = day.journal || '';
+
+    // Update calendar
+    const [dateY, dateM] = currentDate.split('-').map(Number);
+    calendarYear = dateY;
+    calendarMonth = dateM - 1;
+    renderCalendar(calendarYear, calendarMonth, 'calendar-grid', 'cal-month');
+  }
+
+  function renderList(key, items, isTodo) {
+    const list = document.getElementById('list-' + key);
+    if (!list) return;
+    if (items.length === 0) {
+      list.innerHTML = `<div class="empty-msg">まだ何もありません</div>`;
+      return;
+    }
+
+    const isPersist = PERSIST_KEYS.includes(key);
+
+    list.innerHTML = items.map((item, i) => {
+      let text, addedAt;
+      if (isPersist) {
+        text = item.text || item;
+        addedAt = item.addedAt || '';
+      } else {
+        text = isTodo ? item.text : item;
+      }
+
+      if (isTodo) {
+        return `<div class="item-row" data-key="${key}" data-index="${i}">
+          <input type="checkbox" ${item.done ? 'checked' : ''} onchange="toggleTodo(${i})">
+          <span class="item-text ${item.done ? 'done' : ''}">${esc(text)}</span>
+          <button class="edit-btn" onclick="startEdit('${key}',${i})" title="編集">✏️</button>
+          <button class="del-btn" onclick="deleteItem('${key}',${i})" title="削除">×</button>
+        </div>`;
+      }
+
+      if (key === 'wantToDo') {
+        const isDone = item.done || false;
+        return `<div class="item-row" data-key="${key}" data-index="${i}">
+          <input type="checkbox" class="want-check" ${isDone ? 'checked' : ''} onchange="toggleWantToDo(${i})">
+          <span class="item-text ${isDone ? 'want-done' : ''}">${esc(text)}</span>
+          ${addedAt ? `<span class="item-date">${addedAt}</span>` : ''}
+          <button class="edit-btn" onclick="startEdit('${key}',${i})" title="編集">✏️</button>
+          <button class="del-btn" onclick="deleteItem('${key}',${i})" title="削除">×</button>
+        </div>`;
+      }
+
+      if (isPersist && addedAt) {
+        return `<div class="item-row" data-key="${key}" data-index="${i}">
+          <span class="item-text">${esc(text)}</span>
+          <span class="item-date">${addedAt}</span>
+          <button class="edit-btn" onclick="startEdit('${key}',${i})" title="編集">✏️</button>
+          <button class="del-btn" onclick="deleteItem('${key}',${i})" title="削除">×</button>
+        </div>`;
+      }
+
+      return `<div class="item-row" data-key="${key}" data-index="${i}">
+        <span class="item-text">${esc(text)}</span>
+        <button class="edit-btn" onclick="startEdit('${key}',${i})" title="編集">✏️</button>
+        <button class="del-btn" onclick="deleteItem('${key}',${i})" title="削除">×</button>
+      </div>`;
+    }).join('');
+  }
+
+  function esc(str) {
+    return String(str)
+      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  }
+
+  // ══════════════════════════════════════════════
+  // Calendar
+  // ══════════════════════════════════════════════
+  function renderCalendar(year, month, gridId, monthId) {
+    const today = todayStr();
+    const [todayY, todayM, todayD] = today.split('-').map(Number);
+
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startingDayOfWeek = firstDay.getDay();
+
+    const grid = document.getElementById(gridId);
+    let html = '';
+
+    // Day headers
+    const dayNames = ['日', '月', '火', '水', '木', '金', '土'];
+    dayNames.forEach(name => {
+      html += `<div class="cal-day-header">${name}</div>`;
+    });
+
+    // Previous month's dates
+    const prevMonthDays = startingDayOfWeek;
+    const prevMonth = month === 0 ? 11 : month - 1;
+    const prevYear = month === 0 ? year - 1 : year;
+    const prevMonthLastDay = new Date(year, month, 0).getDate();
+    for (let i = prevMonthDays - 1; i >= 0; i--) {
+      html += `<div class="cal-date other-month">${prevMonthLastDay - i}</div>`;
+    }
+
+    // Current month's dates
+    const dates = allDailyDates();
+    for (let d = 1; d <= daysInMonth; d++) {
+      const dateStr = `${year}-${pad(month + 1)}-${pad(d)}`;
+      const isToday = (year === todayY && month === todayM - 1 && d === todayD);
+      const hasData = dates.includes(dateStr);
+      const classes = ['cal-date'];
+      if (isToday) classes.push('today');
+      if (hasData) classes.push('has-data');
+
+      html += `<div class="${classes.join(' ')}" onclick="setCurrentDateFromCalendar('${dateStr}')">${d}</div>`;
+    }
+
+    // Next month's dates
+    const nextMonthDays = Math.ceil((7 + prevMonthDays + daysInMonth) / 7) * 7 - (7 + prevMonthDays + daysInMonth);
+    for (let d = 1; d <= nextMonthDays; d++) {
+      html += `<div class="cal-date other-month">${d}</div>`;
+    }
+
+    grid.innerHTML = html;
+
+    // Update month display
+    const monthDisplay = document.getElementById(monthId);
+    if (monthDisplay) {
+      monthDisplay.textContent = `${year}年${month + 1}月`;
+    }
+  }
+
+  function setCurrentDateFromCalendar(dateStr) {
+    currentDate = dateStr;
+    calendarYear = parseInt(dateStr.split('-')[0]);
+    calendarMonth = parseInt(dateStr.split('-')[1]) - 1;
+    render();
+    renderCalendar(calendarYear, calendarMonth, 'calendar-grid', 'cal-month');
+  }
+
+  // ══════════════════════════════════════════════
+  // Actions
+  // ══════════════════════════════════════════════
+  function addItem(key) {
+    const input = document.getElementById('input-' + key);
+    const val = input.value.trim();
+    if (!val) return;
+
+    if (PERSIST_KEYS.includes(key)) {
+      const data = loadPersistent();
+      const item = key === 'wantToDo'
+        ? { text: val, addedAt: todayStr(), done: false }
+        : { text: val, addedAt: todayStr() };
+      data[key].push(item);
+      savePersistent(data);
+    } else if (key === 'todos') {
+      const data = loadDay(currentDate);
+      data.todos.push({ text: val, done: false });
+      saveDay(currentDate, data);
+    } else {
+      const data = loadDay(currentDate);
+      data[key].push(val);
+      saveDay(currentDate, data);
+    }
+
+    input.value = '';
+    render();
+    if (NOTIFY_KEYS[key]) notify(key, val);
+  }
+
+  function deleteItem(key, index) {
+    if (PERSIST_KEYS.includes(key)) {
+      const data = loadPersistent();
+      data[key].splice(index, 1);
+      savePersistent(data);
+    } else {
+      const data = loadDay(currentDate);
+      data[key].splice(index, 1);
+      saveDay(currentDate, data);
+    }
+    render();
+  }
+
+  // ── Inline edit ───────────────────────────────
+  function startEdit(key, index) {
+    const row = document.querySelector(`.item-row[data-key="${key}"][data-index="${index}"]`);
+    if (!row) return;
+
+    const textEl = row.querySelector('.item-text');
+    const currentVal = textEl.textContent.trim();
+
+    // テキストをインライン入力に置換
+    const input = document.createElement('input');
+    input.type      = 'text';
+    input.value     = currentVal;
+    input.className = 'edit-input';
+    input.addEventListener('keydown', e => {
+      if (e.key === 'Enter')  saveEdit(key, index, input.value);
+      if (e.key === 'Escape') cancelEdit();
+    });
+    textEl.replaceWith(input);
+    input.focus();
+    input.select();
+
+    // 既存ボタンを隠す
+    row.querySelectorAll('.edit-btn, .del-btn').forEach(b => b.style.display = 'none');
+
+    // 保存・キャンセルボタンを追加
+    const saveBtn = document.createElement('button');
+    saveBtn.className   = 'confirm-btn';
+    saveBtn.textContent = '✓';
+    saveBtn.onclick     = () => saveEdit(key, index, input.value);
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className   = 'cancel-edit-btn';
+    cancelBtn.textContent = '✗';
+    cancelBtn.onclick     = cancelEdit;
+
+    row.appendChild(saveBtn);
+    row.appendChild(cancelBtn);
+  }
+
+  function saveEdit(key, index, newVal) {
+    const val = newVal.trim();
+    if (!val) { cancelEdit(); return; }
+
+    if (PERSIST_KEYS.includes(key)) {
+      const data = loadPersistent();
+      // 文字列オブジェクト両方に対応
+      if (typeof data[key][index] === 'object' && data[key][index] !== null) {
+        data[key][index].text = val;
+      } else {
+        data[key][index] = val;
+      }
+      savePersistent(data);
+    } else {
+      const data = loadDay(currentDate);
+      if (key === 'todos') {
+        data.todos[index].text = val;
+      } else {
+        data[key][index] = val;
+      }
+      saveDay(currentDate, data);
+    }
+    render();
+  }
+
+  function cancelEdit() {
+    render();
+  }
+
+  function toggleTodo(index) {
+    const data = loadDay(currentDate);
+    data.todos[index].done = !data.todos[index].done;
+    saveDay(currentDate, data);
+    render();
+  }
+
+  function toggleWantToDo(index) {
+    const data = loadPersistent();
+    const item = data.wantToDo[index];
+    if (typeof item === 'object') {
+      item.done = !item.done;
+    } else {
+      // 旧フォーマット（文字列）の場合はオブジェクトに昇格
+      data.wantToDo[index] = { text: item, addedAt: '', done: true };
+    }
+    savePersistent(data);
+    render();
+  }
+
+  // Journal auto-save
+  document.getElementById('journal-text').addEventListener('input', (e) => {
+    clearTimeout(saveTimer);
+    document.getElementById('save-indicator').textContent = '編集中...';
+    saveTimer = setTimeout(() => {
+      const data = loadDay(currentDate);
+      data.journal = e.target.value;
+      saveDay(currentDate, data);
+      document.getElementById('save-indicator').textContent = '保存済み ✓';
+      setTimeout(() => { document.getElementById('save-indicator').textContent = ''; }, 2000);
+    }, 600);
+  });
+
+  // ══════════════════════════════════════════════
+  // History view
+  // ══════════════════════════════════════════════
+  function renderHistory() {
+    const dates = allDailyDates();
+    const container = document.getElementById('history-content');
+
+    if (dates.length === 0) {
+      container.innerHTML = `<div class="history-empty">まだ日別記録がありません</div>`;
+      return;
+    }
+
+    container.innerHTML = dates.map(date => {
+      const day = loadDay(date);
+      const hasTodos    = day.todos?.length > 0;
+      const hasDidToday = day.didToday?.length > 0;
+      const hasJournal  = day.journal?.trim().length > 0;
+      if (!hasTodos && !hasDidToday && !hasJournal) return '';
+
+      const doneCnt  = (day.todos || []).filter(t => t.done).length;
+      const todoCnt  = (day.todos || []).length;
+      const didCnt   = (day.didToday || []).length;
+      const parts = [];
+      if (todoCnt)  parts.push(`ToDo ${doneCnt}/${todoCnt}`);
+      if (didCnt)   parts.push(`やったこと ${didCnt}件`);
+      if (hasJournal) parts.push('ジャーナル');
+
+      const todosHtml = hasTodos ? `
+        <div>
+          <div class="history-section-title">📋 今日のToDo</div>
+          <div class="history-items">
+            ${day.todos.map(t => `
+              <div class="history-item ${t.done ? 'done-item' : ''}">
+                <span class="hi-icon">${t.done ? '✅' : '○'}</span>
+                <span class="hi-text">${esc(t.text)}</span>
+              </div>`).join('')}
+          </div>
+        </div>` : '';
+
+      const didHtml = hasDidToday ? `
+        <div>
+          <div class="history-section-title">✨ 今日やったこと</div>
+          <div class="history-items">
+            ${day.didToday.map(t => `
+              <div class="history-item">
+                <span class="hi-icon">•</span>
+                <span class="hi-text">${esc(t)}</span>
+              </div>`).join('')}
+          </div>
+        </div>` : '';
+
+      const journalHtml = hasJournal ? `
+        <div>
+          <div class="history-section-title">📖 ジャーナル</div>
+          <div class="history-journal truncated" id="jrn-${date}">${esc(day.journal)}</div>
+          <button class="expand-btn" id="jbtn-${date}" onclick="toggleJournal('${date}')">もっと見る</button>
+        </div>` : '';
+
+      return `
+        <div class="history-card" id="card-${date}">
+          <div class="history-card-header" onclick="toggleCard('${date}')">
+            <span class="history-date">${formatDisplay(date)}</span>
+            <span class="history-summary">${parts.join('　')}</span>
+            <span class="history-chevron">▼</span>
+          </div>
+          <div class="history-card-body">
+            ${todosHtml}${didHtml}${journalHtml}
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  function toggleCard(date) {
+    document.getElementById('card-' + date).classList.toggle('collapsed');
+  }
+
+  function toggleJournal(date) {
+    const el  = document.getElementById('jrn-' + date);
+    const btn = document.getElementById('jbtn-' + date);
+    const expanded = el.classList.toggle('truncated');
+    btn.textContent = !expanded ? 'もっと見る' : '閉じる';
+  }
+
+  // ══════════════════════════════════════════════
+  // View switching
+  // ══════════════════════════════════════════════
+  function setHistoryMode(on) {
+    historyMode = on;
+    document.getElementById('main-view').style.display    = on ? 'none' : 'contents';
+    document.getElementById('history-view').classList.toggle('active', on);
+    document.getElementById('date-nav').style.visibility  = on ? 'hidden' : '';
+    document.getElementById('history-toggle').classList.toggle('active', on);
+    if (on) {
+      renderHistory();
+      renderCalendar(historyCalendarYear, historyCalendarMonth, 'history-calendar-grid', 'hist-cal-month');
+    }
+  }
+
+  document.getElementById('history-toggle').addEventListener('click', () => {
+    setHistoryMode(!historyMode);
+  });
+
+  // ══════════════════════════════════════════════
+  // Tabs
+  // ══════════════════════════════════════════════
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tab   = btn.dataset.tab;
+      const group = btn.dataset.group;
+      activeTab = tab;
+
+      document.querySelectorAll('.tab-btn').forEach(b => {
+        b.classList.remove('active-persist', 'active-daily');
+      });
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+
+      btn.classList.add(group === 'persist' ? 'active-persist' : 'active-daily');
+      document.getElementById('panel-' + tab).classList.add('active');
+    });
+  });
+
+  // ── Calendar navigation ──
+  document.getElementById('cal-prev').addEventListener('click', () => {
+    calendarMonth--;
+    if (calendarMonth < 0) {
+      calendarMonth = 11;
+      calendarYear--;
+    }
+    renderCalendar(calendarYear, calendarMonth, 'calendar-grid', 'cal-month');
+  });
+
+  document.getElementById('cal-next').addEventListener('click', () => {
+    calendarMonth++;
+    if (calendarMonth > 11) {
+      calendarMonth = 0;
+      calendarYear++;
+    }
+    renderCalendar(calendarYear, calendarMonth, 'calendar-grid', 'cal-month');
+  });
+
+  document.getElementById('hist-cal-prev').addEventListener('click', () => {
+    historyCalendarMonth--;
+    if (historyCalendarMonth < 0) {
+      historyCalendarMonth = 11;
+      historyCalendarYear--;
+    }
+    renderCalendar(historyCalendarYear, historyCalendarMonth, 'history-calendar-grid', 'hist-cal-month');
+  });
+
+  document.getElementById('hist-cal-next').addEventListener('click', () => {
+    historyCalendarMonth++;
+    if (historyCalendarMonth > 11) {
+      historyCalendarMonth = 0;
+      historyCalendarYear++;
+    }
+    renderCalendar(historyCalendarYear, historyCalendarMonth, 'history-calendar-grid', 'hist-cal-month');
+  });
+
+  // ══════════════════════════════════════════════
+  // Date navigation
+  // ══════════════════════════════════════════════
+  document.getElementById('prev-btn').addEventListener('click', () => {
+    currentDate = shiftDate(currentDate, -1); render();
+  });
+
+  document.getElementById('next-btn').addEventListener('click', () => {
+    currentDate = shiftDate(currentDate, 1); render();
+  });
+
+  document.getElementById('today-btn').addEventListener('click', () => {
+    currentDate = todayStr(); render();
+  });
+
+  // Enter key
+  [...PERSIST_KEYS, 'todos', 'didToday'].forEach(key => {
+    document.getElementById('input-' + key).addEventListener('keydown', e => {
+      if (e.key === 'Enter') addItem(key);
+    });
+  });
+
+  // ══════════════════════════════════════════════
+  // Settings
+  // ══════════════════════════════════════════════
+  function loadSettings() {
+    try { return JSON.parse(localStorage.getItem(SETTINGS_KEY)) || {}; } catch { return {}; }
+  }
+
+  function saveSettings() {
+    const url = document.getElementById('webhook-url').value.trim();
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify({ webhookUrl: url }));
+    showToast('設定を保存しました ✓');
+  }
+
+  function initSettings() {
+    const s = loadSettings();
+    if (s.webhookUrl) document.getElementById('webhook-url').value = s.webhookUrl;
+  }
+
+  document.getElementById('settings-toggle').addEventListener('click', () => {
+    document.getElementById('settings-panel').classList.toggle('open');
+  });
+
+  // ══════════════════════════════════════════════
+  // Discord Notify
+  // ══════════════════════════════════════════════
+  async function notify(key, text) {
+    const url = loadSettings().webhookUrl;
+    if (!url) return;
+    const meta = SECTION_LABELS[key];
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ embeds: [{
+          title: `${meta.emoji} ${meta.label}に追加しました`,
+          description: text,
+          color: meta.color,
+          footer: { text: `Daily Journal  •  ${formatDisplay(currentDate)}` },
+        }]}),
+      });
+      if (res.ok || res.status === 204) showToast('Discord に送信しました ✓');
+      else showToast('送信失敗 — Webhook URL を確認してください', true);
+    } catch { showToast('送信失敗 — ネットワークエラー', true); }
+  }
+
+  async function sendDailySummary() {
+    const url = loadSettings().webhookUrl;
+    if (!url) {
+      showToast('先に Webhook URL を設定してください', true);
+      document.getElementById('settings-panel').classList.add('open');
+      return;
+    }
+
+    const day      = loadDay(currentDate);
+    const todos    = day.todos    || [];
+    const didToday = day.didToday || [];
+    const journal  = (day.journal || '').trim();
+
+    if (todos.length === 0 && didToday.length === 0 && !journal) {
+      showToast('今日はまだ記録がありません', true);
+      return;
+    }
+
+    const fields = [];
+
+    // ── ToDo フィールド ──
+    if (todos.length > 0) {
+      const doneCnt = todos.filter(t => t.done).length;
+      const lines   = todos.map(t =>
+        t.done ? `✅  ~~${t.text}~~` : `○  ${t.text}`
+      );
+      let value = lines.join('\n');
+      if (value.length > 1020) value = value.slice(0, 1020) + '…';
+      fields.push({
+        name:   `📋 今日のToDo　${doneCnt}/${todos.length} 完了`,
+        value,
+        inline: false,
+      });
+    }
+
+    // ── やったこと フィールド ──
+    if (didToday.length > 0) {
+      const lines = didToday.map(t => `•  ${t}`);
+      let value   = lines.join('\n');
+      if (value.length > 1020) value = value.slice(0, 1020) + '…';
+      fields.push({
+        name:   '✨ 今日やったこと',
+        value,
+        inline: false,
+      });
+    }
+
+    // ── ジャーナル フィールド ──
+    if (journal) {
+      let value = journal;
+      if (value.length > 1020) value = value.slice(0, 1020) + '…';
+      fields.push({
+        name:   '📖 ジャーナリング',
+        value,
+        inline: false,
+      });
+    }
+
+    const payload = {
+      embeds: [{
+        title:  `📅 日次まとめ — ${formatDisplay(currentDate)}`,
+        color:  0x5b7fa6,
+        fields,
+        footer: { text: 'Daily Journal' },
+        timestamp: new Date().toISOString(),
+      }]
+    };
+
+    try {
+      const res = await fetch(url, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(payload),
+      });
+      if (res.ok || res.status === 204) {
+        showToast('日次まとめを Discord に送信しました ✓');
+      } else {
+        showToast(`送信失敗 (${res.status}) — Webhook URL を確認してください`, true);
+      }
+    } catch {
+      showToast('送信失敗 — ネットワークエラー', true);
+    }
+  }
+
+  document.getElementById('summary-btn').addEventListener('click', sendDailySummary);
+
+  async function testWebhook() {
+    const url = document.getElementById('webhook-url').value.trim();
+    if (!url) { showToast('Webhook URL を入力してください', true); return; }
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify({ webhookUrl: url }));
+    try {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ embeds: [{ title: '🔔 テスト送信', description: 'Daily Journal の接続テストです', color: 0x5b7fa6 }] }),
+      });
+      if (res.ok || res.status === 204) showToast('テスト送信成功 ✓ Discordを確認してください');
+      else showToast(`送信失敗 (${res.status})`, true);
+    } catch { showToast('送信失敗 — ネットワークエラー', true); }
+  }
+
+  // ══════════════════════════════════════════════
+  // Toast
+  // ══════════════════════════════════════════════
+  let toastTimer = null;
+  function showToast(msg, isError = false) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.toggle('error', isError);
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+  }
+
+  // ══════════════════════════════════════════════
+  // Init
+  // ══════════════════════════════════════════════
+  migrateV1();
+  migrateV2ToV2_1();
+  initSettings();
+  render();
+</script>
+
+</body>
+</html>
