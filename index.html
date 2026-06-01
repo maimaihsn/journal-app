@@ -37,7 +37,7 @@
     /* ── Header ── */
     header {
       width: 100%;
-      max-width: 700px;
+      max-width: 600px;
       margin-bottom: 20px;
     }
 
@@ -111,7 +111,7 @@
     /* ── Settings panel ── */
     .settings-panel {
       width: 100%;
-      max-width: 700px;
+      max-width: 600px;
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius);
@@ -587,42 +587,80 @@
       text-align: left;
     }
 
-    /* ── Main layout (sidebar + content) ── */
-    .main-layout {
+    /* ── Main layout (single column) ── */
+    #main-view {
       width: 100%;
-      max-width: 700px;
+      max-width: 600px;
       display: flex;
-      align-items: flex-start;
-      gap: 12px;
+      flex-direction: column;
+      gap: 16px;
     }
 
-    /* ── Calendar widget (left sidebar) ── */
+    /* ── Calendar widget (full width, compact) ── */
     #calendar-widget {
-      width: 200px;
-      flex-shrink: 0;
+      width: 100%;
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius);
       box-shadow: var(--shadow);
-      padding: 10px;
-      position: sticky;
-      top: 16px;
+      padding: 12px 14px;
     }
 
-    /* ── Content area ── */
-    #content-area {
-      width: 480px;
-      flex-shrink: 0;
+    /* ── Section blocks ── */
+    .section-block {
       display: flex;
       flex-direction: column;
-      gap: 0;
+      gap: 10px;
     }
 
-    @media (max-width: 540px) {
-      .main-layout { flex-direction: column; }
-      #calendar-widget { width: 100%; position: static; }
-      #content-area { width: 100%; }
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      padding: 2px 0;
+      user-select: none;
     }
+
+    .section-header::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .section-label {
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      white-space: nowrap;
+    }
+
+    .section-label.persist { color: var(--accent2); }
+    .section-label.daily   { color: var(--accent); }
+
+    .section-desc {
+      font-size: 0.7rem;
+      color: var(--text-sub);
+      white-space: nowrap;
+    }
+
+    .section-chevron {
+      font-size: 0.65rem;
+      color: var(--text-sub);
+      transition: transform 0.2s;
+      flex-shrink: 0;
+    }
+
+    .section-block.collapsed .section-chevron { transform: rotate(-90deg); }
+
+    .section-body {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .section-block.collapsed .section-body { display: none; }
 
     .calendar-header {
       display: flex;
@@ -658,20 +696,20 @@
 
     .cal-day-header {
       text-align: center;
-      font-size: 0.7rem;
+      font-size: 0.75rem;
       font-weight: 700;
       color: var(--text-sub);
-      padding: 2px 1px;
+      padding: 4px 1px;
       letter-spacing: 0.05em;
     }
 
     .cal-date {
-      aspect-ratio: 1;
+      height: 34px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 0.75rem;
-      border-radius: 3px;
+      font-size: 0.82rem;
+      border-radius: 4px;
       cursor: pointer;
       background: var(--bg);
       color: var(--text);
@@ -826,6 +864,120 @@
     #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
     #toast.error { background: var(--danger); }
 
+    /* ── Sleep panel ── */
+    .sleep-form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .sleep-input-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .sleep-field {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .sleep-field label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--text-sub);
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    .sleep-field input[type="time"] {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 9px 12px;
+      font-size: 1.05rem;
+      color: var(--text);
+      background: var(--bg);
+      outline: none;
+      transition: border-color 0.15s;
+      font-family: inherit;
+      width: 120px;
+    }
+
+    .sleep-field input[type="time"]:focus { border-color: var(--accent); }
+
+    .sleep-arrow {
+      font-size: 1.1rem;
+      color: var(--text-sub);
+      padding-bottom: 9px;
+    }
+
+    .sleep-save-btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 9px 18px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: opacity 0.15s;
+      white-space: nowrap;
+    }
+
+    .sleep-save-btn:hover { opacity: 0.85; }
+
+    .sleep-duration {
+      font-size: 1.05rem;
+      font-weight: 700;
+      text-align: center;
+      padding: 4px 0;
+      min-height: 1.5em;
+      transition: color 0.2s;
+    }
+
+    .sleep-graph-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .sleep-graph-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: var(--text-sub);
+    }
+
+    .sleep-legend {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .sleep-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.7rem;
+      color: var(--text-sub);
+    }
+
+    .sleep-legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+
+    #sleep-graph {
+      width: 100%;
+      display: block;
+      overflow: visible;
+    }
+
     /* ── Responsive ── */
     @media (max-width: 420px) {
       .tab-btn { font-size: 0.72rem; padding: 7px 4px; }
@@ -868,93 +1020,123 @@
 
 <!-- ── Main view ── -->
 <div id="main-view">
-<div class="main-layout">
 
-<!-- Calendar widget (left sidebar) -->
-<div id="calendar-widget">
-  <div class="calendar-header">
-    <button id="cal-prev">◀</button>
-    <span id="cal-month">2026年5月</span>
-    <button id="cal-next">▶</button>
-  </div>
-  <div id="calendar-grid"></div>
-</div>
-
-<!-- Content area (tabs + panels) -->
-<div id="content-area">
-
-  <!-- 蓄積タブ群 -->
-  <div class="tab-group">
-    <span class="group-label persist">蓄積</span>
-    <button class="tab-btn active-persist" data-tab="wantToDo" data-group="persist">やりたいこと</button>
-    <button class="tab-btn" data-tab="wishlist"  data-group="persist">ほしいもの</button>
-    <button class="tab-btn" data-tab="goals"     data-group="persist">目標</button>
+  <!-- ① カレンダー -->
+  <div id="calendar-widget">
+    <div class="calendar-header">
+      <button id="cal-prev">◀</button>
+      <span id="cal-month">2026年5月</span>
+      <button id="cal-next">▶</button>
+    </div>
+    <div id="calendar-grid"></div>
   </div>
 
-  <!-- 日別タブ群 -->
-  <div class="tab-group">
-    <span class="group-label daily">日別</span>
-    <button class="tab-btn" data-tab="todos"    data-group="daily">今日のToDo</button>
-    <button class="tab-btn" data-tab="didToday" data-group="daily">今日やったこと</button>
-    <button class="tab-btn" data-tab="journal"  data-group="daily">ジャーナル</button>
-  </div>
-
-  <!-- 蓄積パネル -->
-  <div class="panel active" id="panel-wantToDo">
-    <div class="panel-title persist">やりたいこと</div>
-    <div class="item-list" id="list-wantToDo"></div>
-    <div class="add-row">
-      <input type="text" id="input-wantToDo" placeholder="やりたいことを追加...">
-      <button class="add-btn" onclick="addItem('wantToDo')">追加</button>
+  <!-- ② 蓄積セクション -->
+  <div class="section-block" id="section-persist">
+    <div class="section-header" onclick="toggleSection('persist')">
+      <span class="section-label persist">🌱 蓄積</span>
+      <span class="section-desc">日付をまたいで積み上がるリスト</span>
+      <span class="section-chevron">▼</span>
+    </div>
+    <div class="section-body" id="body-persist">
+      <div class="tab-group">
+        <button class="tab-btn active-persist" data-tab="wantToDo" data-group="persist">やりたいこと</button>
+        <button class="tab-btn" data-tab="wishlist"  data-group="persist">ほしいもの</button>
+        <button class="tab-btn" data-tab="goals"     data-group="persist">目標</button>
+      </div>
+      <div class="panel active" id="panel-wantToDo">
+        <div class="panel-title persist">やりたいこと</div>
+        <div class="item-list" id="list-wantToDo"></div>
+        <div class="add-row">
+          <input type="text" id="input-wantToDo" placeholder="やりたいことを追加...">
+          <button class="add-btn" onclick="addItem('wantToDo')">追加</button>
+        </div>
+      </div>
+      <div class="panel" id="panel-wishlist">
+        <div class="panel-title persist">ほしいもの</div>
+        <div class="item-list" id="list-wishlist"></div>
+        <div class="add-row">
+          <input type="text" id="input-wishlist" placeholder="ほしいものを追加...">
+          <button class="add-btn" onclick="addItem('wishlist')">追加</button>
+        </div>
+      </div>
+      <div class="panel" id="panel-goals">
+        <div class="panel-title persist">目標</div>
+        <div class="item-list" id="list-goals"></div>
+        <div class="add-row">
+          <input type="text" id="input-goals" placeholder="目標を追加...">
+          <button class="add-btn" onclick="addItem('goals')">追加</button>
+        </div>
+      </div>
     </div>
   </div>
 
-  <div class="panel" id="panel-wishlist">
-    <div class="panel-title persist">ほしいもの</div>
-    <div class="item-list" id="list-wishlist"></div>
-    <div class="add-row">
-      <input type="text" id="input-wishlist" placeholder="ほしいものを追加...">
-      <button class="add-btn" onclick="addItem('wishlist')">追加</button>
+  <!-- ③ 日別セクション -->
+  <div class="section-block" id="section-daily">
+    <div class="section-header" onclick="toggleSection('daily')">
+      <span class="section-label daily">📅 日別</span>
+      <span class="section-desc">その日だけの記録</span>
+      <span class="section-chevron">▼</span>
+    </div>
+    <div class="section-body" id="body-daily">
+      <div class="tab-group">
+        <button class="tab-btn" data-tab="todos"    data-group="daily">今日のToDo</button>
+        <button class="tab-btn" data-tab="didToday" data-group="daily">今日やったこと</button>
+        <button class="tab-btn" data-tab="journal"  data-group="daily">ジャーナル</button>
+        <button class="tab-btn" data-tab="sleep"    data-group="daily">😴 睡眠</button>
+      </div>
+      <div class="panel" id="panel-todos">
+        <div class="panel-title daily">今日のToDo</div>
+        <div class="item-list" id="list-todos"></div>
+        <div class="add-row">
+          <input type="text" id="input-todos" placeholder="ToDoを追加...">
+          <button class="add-btn" onclick="addItem('todos')">追加</button>
+        </div>
+      </div>
+      <div class="panel" id="panel-didToday">
+        <div class="panel-title daily">今日やったこと</div>
+        <div class="item-list" id="list-didToday"></div>
+        <div class="add-row">
+          <input type="text" id="input-didToday" placeholder="今日やったことを追加...">
+          <button class="add-btn" onclick="addItem('didToday')">追加</button>
+        </div>
+      </div>
+      <div class="panel" id="panel-journal">
+        <div class="panel-title daily">ジャーナリング</div>
+        <textarea id="journal-text" placeholder="今日のことを自由に書いてください..."></textarea>
+        <div class="save-indicator" id="save-indicator"></div>
+      </div>
+      <div class="panel" id="panel-sleep">
+        <div class="panel-title daily">😴 睡眠記録</div>
+        <div class="sleep-form">
+          <div class="sleep-input-row">
+            <div class="sleep-field">
+              <label>就寝</label>
+              <input type="time" id="sleep-at">
+            </div>
+            <div class="sleep-arrow">→</div>
+            <div class="sleep-field">
+              <label>起床</label>
+              <input type="time" id="wake-at">
+            </div>
+            <button class="sleep-save-btn" onclick="saveSleep()">記録</button>
+          </div>
+          <div class="sleep-duration" id="sleep-duration"></div>
+        </div>
+        <div class="sleep-graph-wrap">
+          <div class="sleep-graph-label">直近14日の睡眠時間</div>
+          <svg id="sleep-graph" viewBox="0 0 560 160" height="160"></svg>
+          <div class="sleep-legend">
+            <div class="sleep-legend-item"><div class="sleep-legend-dot" style="background:#e07b7b"></div>〜6時間</div>
+            <div class="sleep-legend-item"><div class="sleep-legend-dot" style="background:#d4a843"></div>6〜7時間</div>
+            <div class="sleep-legend-item"><div class="sleep-legend-dot" style="background:#6a9e7f"></div>7〜9時間</div>
+            <div class="sleep-legend-item"><div class="sleep-legend-dot" style="background:#7f9abb"></div>9時間〜</div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 
-  <div class="panel" id="panel-goals">
-    <div class="panel-title persist">目標</div>
-    <div class="item-list" id="list-goals"></div>
-    <div class="add-row">
-      <input type="text" id="input-goals" placeholder="目標を追加...">
-      <button class="add-btn" onclick="addItem('goals')">追加</button>
-    </div>
-  </div>
-
-  <!-- 日別パネル -->
-  <div class="panel" id="panel-todos">
-    <div class="panel-title daily">今日のToDo</div>
-    <div class="item-list" id="list-todos"></div>
-    <div class="add-row">
-      <input type="text" id="input-todos" placeholder="ToDoを追加...">
-      <button class="add-btn" onclick="addItem('todos')">追加</button>
-    </div>
-  </div>
-
-  <div class="panel" id="panel-didToday">
-    <div class="panel-title daily">今日やったこと</div>
-    <div class="item-list" id="list-didToday"></div>
-    <div class="add-row">
-      <input type="text" id="input-didToday" placeholder="今日やったことを追加...">
-      <button class="add-btn" onclick="addItem('didToday')">追加</button>
-    </div>
-  </div>
-
-  <div class="panel" id="panel-journal">
-    <div class="panel-title daily">ジャーナリング</div>
-    <textarea id="journal-text" placeholder="今日のことを自由に書いてください..."></textarea>
-    <div class="save-indicator" id="save-indicator"></div>
-  </div>
-
-</div><!-- /content-area -->
-
-</div><!-- /main-layout -->
 </div><!-- /main-view -->
 
 <!-- ── History view ── -->
@@ -1028,7 +1210,7 @@
 
   function loadDay(date) {
     const s = loadStore();
-    const defaults = { todos: [], didToday: [], journal: '' };
+    const defaults = { todos: [], didToday: [], journal: '', sleep: null };
     return Object.assign({}, defaults, (s.daily || {})[date] || {});
   }
 
@@ -1158,6 +1340,7 @@
     calendarYear = dateY;
     calendarMonth = dateM - 1;
     renderCalendar(calendarYear, calendarMonth, 'calendar-grid', 'cal-month');
+    renderSleepPanel();
   }
 
   function renderList(key, items, isTodo) {
@@ -1456,15 +1639,18 @@
       const hasTodos    = day.todos?.length > 0;
       const hasDidToday = day.didToday?.length > 0;
       const hasJournal  = day.journal?.trim().length > 0;
-      if (!hasTodos && !hasDidToday && !hasJournal) return '';
+      const sleepData   = day.sleep || {};
+      const sleepHours  = calcSleepHours(sleepData.sleepAt || '', sleepData.wakeAt || '');
+      if (!hasTodos && !hasDidToday && !hasJournal && sleepHours === null) return '';
 
       const doneCnt  = (day.todos || []).filter(t => t.done).length;
       const todoCnt  = (day.todos || []).length;
       const didCnt   = (day.didToday || []).length;
       const parts = [];
-      if (todoCnt)  parts.push(`ToDo ${doneCnt}/${todoCnt}`);
-      if (didCnt)   parts.push(`やったこと ${didCnt}件`);
-      if (hasJournal) parts.push('ジャーナル');
+      if (todoCnt)          parts.push(`ToDo ${doneCnt}/${todoCnt}`);
+      if (didCnt)           parts.push(`やったこと ${didCnt}件`);
+      if (hasJournal)       parts.push('ジャーナル');
+      if (sleepHours !== null) parts.push(`😴 ${sleepHours}h`);
 
       const todosHtml = hasTodos ? `
         <div>
@@ -1497,6 +1683,17 @@
           <button class="expand-btn" id="jbtn-${date}" onclick="toggleJournal('${date}')">もっと見る</button>
         </div>` : '';
 
+      const sleepHtml = sleepHours !== null ? `
+        <div>
+          <div class="history-section-title" style="color:${sleepColor(sleepHours)}">😴 睡眠</div>
+          <div class="history-item">
+            <span class="hi-text" style="font-size:0.9rem">
+              就寝 <strong>${sleepData.sleepAt}</strong>　→　起床 <strong>${sleepData.wakeAt}</strong>
+              　<span style="color:${sleepColor(sleepHours)};font-weight:700">${sleepHours}時間</span>
+            </span>
+          </div>
+        </div>` : '';
+
       return `
         <div class="history-card" id="card-${date}">
           <div class="history-card-header" onclick="toggleCard('${date}')">
@@ -1505,7 +1702,7 @@
             <span class="history-chevron">▼</span>
           </div>
           <div class="history-card-body">
-            ${todosHtml}${didHtml}${journalHtml}
+            ${todosHtml}${didHtml}${journalHtml}${sleepHtml}
           </div>
         </div>`;
     }).join('');
@@ -1525,6 +1722,10 @@
   // ══════════════════════════════════════════════
   // View switching
   // ══════════════════════════════════════════════
+  function toggleSection(id) {
+    document.getElementById('section-' + id).classList.toggle('collapsed');
+  }
+
   function setHistoryMode(on) {
     historyMode = on;
     document.getElementById('main-view').style.display    = on ? 'none' : 'contents';
@@ -1557,6 +1758,9 @@
 
       btn.classList.add(group === 'persist' ? 'active-persist' : 'active-daily');
       document.getElementById('panel-' + tab).classList.add('active');
+
+      // 睡眠タブを開いたときにグラフを確実に再描画
+      if (tab === 'sleep') renderSleepGraph();
     });
   });
 
@@ -1706,12 +1910,14 @@
       return;
     }
 
-    const day      = loadDay(currentDate);
-    const todos    = day.todos    || [];
-    const didToday = day.didToday || [];
-    const journal  = (day.journal || '').trim();
+    const day        = loadDay(currentDate);
+    const todos      = day.todos    || [];
+    const didToday   = day.didToday || [];
+    const journal    = (day.journal || '').trim();
+    const sleepData  = day.sleep || {};
+    const sleepHours = calcSleepHours(sleepData.sleepAt || '', sleepData.wakeAt || '');
 
-    if (todos.length === 0 && didToday.length === 0 && !journal) {
+    if (todos.length === 0 && didToday.length === 0 && !journal && sleepHours === null) {
       showToast('今日はまだ記録がありません', true);
       return;
     }
@@ -1752,6 +1958,18 @@
       fields.push({
         name:   '📖 ジャーナリング',
         value,
+        inline: false,
+      });
+    }
+
+    // ── 睡眠 フィールド ──
+    if (sleepHours !== null) {
+      const h = Math.floor(sleepHours);
+      const m = Math.round((sleepHours % 1) * 60);
+      const durationLabel = m > 0 ? `${h}時間${m}分` : `${h}時間`;
+      fields.push({
+        name:   '😴 睡眠',
+        value:  `就寝 **${sleepData.sleepAt}**　→　起床 **${sleepData.wakeAt}**\n睡眠時間：**${durationLabel}**`,
         inline: false,
       });
     }
@@ -1797,6 +2015,132 @@
       if (res.ok || res.status === 204) showToast('テスト送信成功 ✓ Discordを確認してください');
       else showToast(`送信失敗 (${res.status})`, true);
     } catch { showToast('送信失敗 — ネットワークエラー', true); }
+  }
+
+  // ══════════════════════════════════════════════
+  // Sleep
+  // ══════════════════════════════════════════════
+  function calcSleepHours(sleepAt, wakeAt) {
+    if (!sleepAt || !wakeAt) return null;
+    const [sh, sm] = sleepAt.split(':').map(Number);
+    const [wh, wm] = wakeAt.split(':').map(Number);
+    let sleepMins = sh * 60 + sm;
+    let wakeMins  = wh * 60 + wm;
+    if (wakeMins <= sleepMins) wakeMins += 24 * 60; // 日をまたぐ場合
+    return Math.round((wakeMins - sleepMins) / 60 * 10) / 10;
+  }
+
+  function sleepColor(hours) {
+    if (hours < 6)  return '#e07b7b'; // 赤：短すぎ
+    if (hours < 7)  return '#d4a843'; // 黄：やや短い
+    if (hours <= 9) return '#6a9e7f'; // 緑：適正
+    return '#7f9abb';                  // 青：長め
+  }
+
+  function saveSleep() {
+    const sleepAt = document.getElementById('sleep-at').value;
+    const wakeAt  = document.getElementById('wake-at').value;
+    const data    = loadDay(currentDate);
+    data.sleep    = { sleepAt, wakeAt };
+    saveDay(currentDate, data);
+    renderSleepPanel();
+    showToast('睡眠記録を保存しました ✓');
+  }
+
+  function renderSleepPanel() {
+    const day     = loadDay(currentDate);
+    const sleep   = day.sleep || {};
+    const sleepAt = sleep.sleepAt || '';
+    const wakeAt  = sleep.wakeAt  || '';
+
+    const sleepInput = document.getElementById('sleep-at');
+    const wakeInput  = document.getElementById('wake-at');
+    if (sleepInput) sleepInput.value = sleepAt;
+    if (wakeInput)  wakeInput.value  = wakeAt;
+
+    const hours      = calcSleepHours(sleepAt, wakeAt);
+    const durationEl = document.getElementById('sleep-duration');
+    if (durationEl) {
+      if (hours !== null) {
+        const h = Math.floor(hours);
+        const m = Math.round((hours % 1) * 60);
+        const label = m > 0 ? `${h}時間${m}分` : `${h}時間`;
+        durationEl.textContent = `睡眠時間：${label}`;
+        durationEl.style.color  = sleepColor(hours);
+      } else {
+        durationEl.textContent = '';
+      }
+    }
+
+    renderSleepGraph();
+  }
+
+  function renderSleepGraph() {
+    const svg = document.getElementById('sleep-graph');
+    if (!svg) return;
+
+    // 直近14日分のデータ（index 0 = 13日前, index 13 = 今日）
+    const days = [];
+    for (let i = 13; i >= 0; i--) {
+      const dateStr = shiftDate(todayStr(), -i);
+      const d  = loadDay(dateStr);
+      const sl = d.sleep || {};
+      const hours = calcSleepHours(sl.sleepAt || '', sl.wakeAt || '');
+      const [, mo, dy] = dateStr.split('-');
+      days.push({ date: dateStr, hours, label: `${parseInt(mo)}/${parseInt(dy)}` });
+    }
+
+    const GW = 560, GH = 160;
+    const ML = 28, MR = 6, MT = 10, MB = 30;
+    const chartW = GW - ML - MR;
+    const chartH = GH - MT - MB;
+    const MAX_H  = 12;
+    const slotW  = chartW / 14;
+    const barW   = slotW * 0.58;
+    const today  = todayStr();
+
+    let out = '';
+
+    // 水平グリッドライン & Y軸ラベル
+    [0, 3, 6, 9, 12].forEach(h => {
+      const y = MT + chartH * (1 - h / MAX_H);
+      out += `<line x1="${ML}" y1="${y.toFixed(1)}" x2="${GW - MR}" y2="${y.toFixed(1)}" stroke="#e4e2dc" stroke-width="1"${h > 0 ? ' stroke-dasharray="3,3"' : ''}/>`;
+      out += `<text x="${ML - 3}" y="${(y + 3.5).toFixed(1)}" text-anchor="end" font-size="9" fill="#bbb">${h}h</text>`;
+    });
+
+    // バー & X軸ラベル
+    days.forEach(({ date, hours, label }, i) => {
+      const cx        = ML + (i + 0.5) * slotW;
+      const bx        = cx - barW / 2;
+      const isToday   = date === today;
+      const isCurrent = date === currentDate;
+
+      // 今日列の背景ハイライト
+      if (isToday) {
+        out += `<rect x="${(cx - slotW / 2).toFixed(1)}" y="${MT}" width="${slotW.toFixed(1)}" height="${chartH}" rx="2" fill="#5b7fa6" opacity="0.07"/>`;
+      }
+
+      if (hours !== null) {
+        const barH = Math.min(hours, MAX_H) / MAX_H * chartH;
+        const by   = MT + chartH - barH;
+        const col  = sleepColor(hours);
+        out += `<rect x="${bx.toFixed(1)}" y="${by.toFixed(1)}" width="${barW.toFixed(1)}" height="${barH.toFixed(1)}" rx="3" fill="${col}" opacity="${isCurrent ? 1 : 0.75}"/>`;
+        if (barH > 16) {
+          out += `<text x="${cx.toFixed(1)}" y="${(by - 3).toFixed(1)}" text-anchor="middle" font-size="8" fill="${col}" font-weight="700">${hours}h</text>`;
+        }
+      } else {
+        // データなし：薄いベースライン
+        const by = MT + chartH - 2;
+        out += `<rect x="${bx.toFixed(1)}" y="${by}" width="${barW.toFixed(1)}" height="2" rx="1" fill="#e8e6e0"/>`;
+      }
+
+      // X軸ラベル（14日前・7日前・今日のみ）
+      if (i === 0 || i === 6 || i === 13) {
+        out += `<text x="${cx.toFixed(1)}" y="${(MT + chartH + 16).toFixed(1)}" text-anchor="middle" font-size="9" fill="${isToday ? '#5b7fa6' : '#bbb'}" font-weight="${isToday ? '700' : '400'}">${label}</text>`;
+      }
+    });
+
+    svg.innerHTML = out;
   }
 
   // ══════════════════════════════════════════════
