@@ -132,7 +132,8 @@
       letter-spacing: 0.05em;
     }
 
-    .settings-panel input[type="text"] {
+    .settings-panel input[type="text"],
+    .settings-panel input[type="password"] {
       width: 100%;
       border: 1px solid var(--border);
       border-radius: 8px;
@@ -145,7 +146,8 @@
       transition: border-color 0.15s;
     }
 
-    .settings-panel input[type="text"]:focus { border-color: var(--accent); }
+    .settings-panel input[type="text"]:focus,
+    .settings-panel input[type="password"]:focus { border-color: var(--accent); }
 
     .settings-actions { display: flex; gap: 8px; }
 
@@ -978,6 +980,108 @@
       overflow: visible;
     }
 
+    /* ── Auth screen ── */
+    #auth-screen {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 16px;
+    }
+
+    #auth-screen.hidden { display: none; }
+
+    .auth-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: 0 4px 28px rgba(0,0,0,0.10);
+      padding: 36px 28px;
+      width: 100%;
+      max-width: 320px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .auth-logo { font-size: 2.2rem; margin-bottom: 2px; }
+
+    .auth-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      color: var(--text-sub);
+      text-transform: uppercase;
+    }
+
+    .auth-subtitle {
+      font-size: 0.82rem;
+      color: var(--text-sub);
+      text-align: center;
+      line-height: 1.6;
+      margin-bottom: 2px;
+    }
+
+    .auth-form {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      width: 100%;
+    }
+
+    .auth-input {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-size: 1rem;
+      color: var(--text);
+      background: var(--bg);
+      outline: none;
+      transition: border-color 0.15s;
+      font-family: inherit;
+      text-align: center;
+      letter-spacing: 0.15em;
+    }
+
+    .auth-input:focus { border-color: var(--accent); }
+    .auth-input::placeholder { letter-spacing: 0.05em; color: var(--border); }
+
+    .auth-btn {
+      width: 100%;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.15s;
+      margin-top: 2px;
+    }
+
+    .auth-btn:hover { opacity: 0.85; }
+
+    .auth-error {
+      font-size: 0.78rem;
+      color: var(--danger);
+      text-align: center;
+      min-height: 1.1em;
+    }
+
+    /* ── Settings: data & security sections ── */
+    .settings-divider {
+      width: 100%;
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 4px 0;
+    }
+
     /* ── Responsive ── */
     @media (max-width: 420px) {
       .tab-btn { font-size: 0.72rem; padding: 7px 4px; }
@@ -986,6 +1090,34 @@
   </style>
 </head>
 <body>
+
+<!-- ── Auth screen ── -->
+<div id="auth-screen">
+  <div class="auth-card">
+    <div class="auth-logo">📔</div>
+    <div class="auth-title">Daily Journal</div>
+
+    <!-- ログインフォーム -->
+    <div class="auth-form" id="auth-login-form">
+      <div class="auth-subtitle">パスワードを入力してください</div>
+      <input type="password" class="auth-input" id="auth-pw-input"
+             placeholder="••••••" autocomplete="current-password">
+      <button class="auth-btn" onclick="tryLogin()">ログイン</button>
+      <div class="auth-error" id="auth-error"></div>
+    </div>
+
+    <!-- 初回セットアップフォーム -->
+    <div class="auth-form" id="auth-setup-form" style="display:none">
+      <div class="auth-subtitle">初めてのアクセスです。<br>パスワードを設定してください</div>
+      <input type="password" class="auth-input" id="auth-new-pw"
+             placeholder="パスワード（4文字以上）" autocomplete="new-password">
+      <input type="password" class="auth-input" id="auth-new-pw2"
+             placeholder="確認用" autocomplete="new-password">
+      <button class="auth-btn" onclick="setupPassword()">設定する</button>
+      <div class="auth-error" id="setup-error"></div>
+    </div>
+  </div>
+</div>
 
 <header>
   <div class="header-row">
@@ -1016,6 +1148,24 @@
     通知対象：<strong>やりたいこと</strong>・<strong>今日のToDo</strong> にアイテムを追加したとき<br>
     Webhook URL は Discord のチャンネル設定 → 連携サービス → ウェブフック から取得できます
   </div>
+
+  <hr class="settings-divider">
+
+  <label>データ管理</label>
+  <div class="settings-actions">
+    <button class="save-settings-btn" style="background:var(--accent2)" onclick="exportData()">💾 エクスポート</button>
+    <button class="test-btn" onclick="importData()">📂 インポート</button>
+  </div>
+  <div class="settings-note">
+    エクスポート：全データをJSONファイルで保存。インポート：バックアップファイルで復元（現在のデータは上書きされます）
+  </div>
+
+  <hr class="settings-divider">
+
+  <label>パスワード変更</label>
+  <input type="password" id="change-pw-new" placeholder="新しいパスワード（4文字以上）">
+  <input type="password" id="change-pw-confirm" placeholder="確認用">
+  <button class="save-settings-btn" onclick="changePassword()">パスワードを変更</button>
 </div>
 
 <!-- ── Main view ── -->
@@ -1160,6 +1310,7 @@
   // ══════════════════════════════════════════════
   const STORAGE_KEY  = 'daily-journal-v2';
   const SETTINGS_KEY = 'daily-journal-settings';
+  const PASSWORD_KEY = 'daily-journal-pw';
 
   const PERSIST_KEYS = ['wantToDo', 'wishlist', 'goals'];
   const DAILY_KEYS   = ['todos', 'didToday', 'journal'];
@@ -2144,6 +2295,133 @@
   }
 
   // ══════════════════════════════════════════════
+  // Auth（パスワード認証）
+  // ══════════════════════════════════════════════
+  async function hashPw(password) {
+    if (!window.crypto?.subtle) return 'nohash:' + password; // file:// フォールバック
+    const data = new TextEncoder().encode('dj-salt-2026:' + password);
+    const buf  = await crypto.subtle.digest('SHA-256', data);
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
+  function initAuth() {
+    // このセッションで認証済み？
+    if (sessionStorage.getItem('journal-auth') === '1') {
+      document.getElementById('auth-screen').classList.add('hidden');
+      return;
+    }
+    // パスワード未設定なら初回セットアップ画面へ
+    if (!localStorage.getItem(PASSWORD_KEY)) {
+      document.getElementById('auth-login-form').style.display = 'none';
+      document.getElementById('auth-setup-form').style.display = 'flex';
+    }
+    // auth-screen はそのまま表示（ユーザーの入力待ち）
+  }
+
+  function unlockApp() {
+    sessionStorage.setItem('journal-auth', '1');
+    document.getElementById('auth-screen').classList.add('hidden');
+  }
+
+  async function tryLogin() {
+    const input  = document.getElementById('auth-pw-input').value;
+    const stored = localStorage.getItem(PASSWORD_KEY);
+    const hash   = await hashPw(input);
+    if (hash === stored) {
+      document.getElementById('auth-error').textContent = '';
+      unlockApp();
+    } else {
+      document.getElementById('auth-error').textContent = 'パスワードが違います ✗';
+      document.getElementById('auth-pw-input').value = '';
+      document.getElementById('auth-pw-input').focus();
+    }
+  }
+
+  async function setupPassword() {
+    const pw1 = document.getElementById('auth-new-pw').value;
+    const pw2 = document.getElementById('auth-new-pw2').value;
+    const err  = document.getElementById('setup-error');
+    if (!pw1)          { err.textContent = 'パスワードを入力してください'; return; }
+    if (pw1.length < 4){ err.textContent = '4文字以上で入力してください'; return; }
+    if (pw1 !== pw2)   { err.textContent = 'パスワードが一致しません'; return; }
+    localStorage.setItem(PASSWORD_KEY, await hashPw(pw1));
+    unlockApp();
+  }
+
+  async function changePassword() {
+    const pw1 = document.getElementById('change-pw-new').value;
+    const pw2 = document.getElementById('change-pw-confirm').value;
+    if (!pw1)          { showToast('新しいパスワードを入力してください', true); return; }
+    if (pw1.length < 4){ showToast('4文字以上で入力してください', true); return; }
+    if (pw1 !== pw2)   { showToast('パスワードが一致しません', true); return; }
+    localStorage.setItem(PASSWORD_KEY, await hashPw(pw1));
+    document.getElementById('change-pw-new').value    = '';
+    document.getElementById('change-pw-confirm').value = '';
+    showToast('パスワードを変更しました ✓');
+  }
+
+  // Enter キーでログイン・セットアップ
+  document.getElementById('auth-pw-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter') tryLogin();
+  });
+  document.getElementById('auth-new-pw2').addEventListener('keydown', e => {
+    if (e.key === 'Enter') setupPassword();
+  });
+
+  // ══════════════════════════════════════════════
+  // Export / Import
+  // ══════════════════════════════════════════════
+  function exportData() {
+    const payload = {
+      version:    2,
+      exportedAt: new Date().toISOString(),
+      store:      loadStore(),
+      settings:   loadSettings(),
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = `journal-backup-${todayStr()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('エクスポートしました ✓');
+  }
+
+  function importData() {
+    const fileInput = document.createElement('input');
+    fileInput.type   = 'file';
+    fileInput.accept = '.json';
+    fileInput.onchange = async e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      try {
+        const text = await file.text();
+        const data = JSON.parse(text);
+        if (!data.store?.persistent || !data.store?.daily) {
+          showToast('無効なバックアップファイルです', true); return;
+        }
+        const dateLabel = data.exportedAt ? data.exportedAt.slice(0, 10) : '不明';
+        if (!confirm(`バックアップ日時：${dateLabel}\n\n現在のデータを上書きしてインポートします。\nよろしいですか？`)) return;
+        saveStore(data.store);
+        if (data.settings) {
+          localStorage.setItem(SETTINGS_KEY, JSON.stringify(data.settings));
+          initSettings();
+        }
+        render();
+        showToast('インポートしました ✓');
+      } catch {
+        showToast('ファイルの読み込みに失敗しました', true);
+      }
+    };
+    document.body.appendChild(fileInput);
+    fileInput.click();
+    document.body.removeChild(fileInput);
+  }
+
+  // ══════════════════════════════════════════════
   // Toast
   // ══════════════════════════════════════════════
   let toastTimer = null;
@@ -2162,6 +2440,7 @@
   migrateV1();
   migrateV2ToV2_1();
   initSettings();
+  initAuth();
   render();
 </script>
 
